@@ -1,0 +1,427 @@
+<!-- function getAIResponse(message) {
+            // Use the enhanced chatbot API
+            fetch('{{ url_for("user.chatbot_api") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                removeTypingIndicator();
+                if (data.success) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage('I apologize, but I encountered an error. Please try again later.', 'bot');
+                }
+            })
+            .catch(error => {
+                console.error('Chatbot API error:', error);
+                removeTypingIndicator();
+                addMessage('I\'m having trouble connecting right now. Please try again in a moment.', 'bot');
+            });
+        } -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medical Insurance Premium Prediction{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Theme Management -->
+    <script>
+        // Load theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+        }
+    </script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-shield-alt me-2"></i>
+                InsuranceAI
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Admin Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.manage_users') }}">
+                                    <i class="fas fa-users me-1"></i>Manage Users
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                                    <i class="fas fa-chart-bar me-1"></i>Analytics
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('user.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('user.predict') }}">
+                                    <i class="fas fa-calculator me-1"></i>Predict Premium
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('user.history') }}">
+                                    <i class="fas fa-history me-1"></i>History
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <!-- Theme Toggle -->
+                    <li class="nav-item me-3">
+                        <button class="btn btn-outline-light btn-sm" id="themeToggle" onclick="toggleTheme()">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        <!-- AI Chatbot Toggle -->
+                        <li class="nav-item me-3">
+                            <button class="btn btn-outline-light btn-sm" onclick="toggleChatbot()">
+                                <i class="fas fa-robot me-1"></i>AI Help
+                            </button>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% if not current_user.is_admin %}
+                                <li><a class="dropdown-item" href="{{ url_for('user.profile') }}">
+                                    <i class="fas fa-user me-2"></i>Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="py-4">
+        {% block content %}
+            {% if error_message %}
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 text-center">
+                            <h2>{{ error_message }}</h2>
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Medical Insurance Prediction</h5>
+                    <p class="mb-0">AI-powered insurance premium prediction system</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0">&copy; 2025 InsuranceAI. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Chatbot -->
+    {% if current_user.is_authenticated %}
+    <div id="chatbot-container" class="chatbot-hidden">
+        <div class="chatbot-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-robot me-2"></i>
+                    <strong>Insurance AI Assistant</strong>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-light me-1" onclick="clearChat()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="toggleChatbot()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages">
+            <div class="message bot-message">
+                <div class="message-content">
+                    <i class="fas fa-robot me-2"></i>
+                    Hi! I'm your Insurance AI Assistant. I can help you with:
+                    <ul class="mt-2 mb-0">
+                        <li>Understanding insurance terms</li>
+                        <li>Explaining premium factors</li>
+                        <li>Health and lifestyle tips</li>
+                        <li>General insurance questions</li>
+                    </ul>
+                    How can I help you today?
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-input">
+            <div class="input-group">
+                <input type="text" id="chatbot-input" class="form-control" placeholder="Ask me anything about insurance..." onkeypress="handleChatEnter(event)">
+                <button class="btn btn-primary" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            if (newTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            } else {
+                document.documentElement.classList.remove('dark-theme');
+                document.getElementById('themeIcon').className = 'fas fa-moon';
+            }
+        }
+        
+        // Set initial theme icon
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            document.getElementById('themeIcon').className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+        
+        // Chatbot functions
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbot-container');
+            if (chatbot) {
+                chatbot.classList.toggle('chatbot-visible');
+                chatbot.classList.toggle('chatbot-hidden');
+            }
+        }
+        
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chatbot-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                
+                // Show typing indicator
+                showTypingIndicator();
+                
+                // Get AI response
+                getAIResponse(message);
+            }
+        }
+        
+        function addMessage(message, type) {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            const icon = type === 'user' ? 'fas fa-user' : 'fas fa-robot';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <i class="${icon} me-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <i class="fas fa-robot me-2"></i>
+                    <span class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </span>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typing-indicator');
+            if (typing) {
+                typing.remove();
+            }
+        }
+        
+        function getAIResponse(message) {
+            // Simulate AI response with predefined responses
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = generateAIResponse(message.toLowerCase());
+                addMessage(response, 'bot');
+            }, 1000 + Math.random() * 2000);
+        }
+        
+        function generateAIResponse(message) {
+            const responses = {
+                // Greetings
+                hello: "Hello! I'm here to help you understand insurance better. What would you like to know?",
+                hi: "Hi there! How can I assist you with your insurance questions today?",
+                
+                // Premium factors
+                premium: "Insurance premiums are calculated based on several factors: your age, BMI, smoking status, number of dependents, and geographic region. Younger, non-smoking individuals with healthy BMI typically pay lower premiums.",
+                
+                factors: "The main factors affecting your premium are:\n• Age (older = higher premium)\n• BMI (healthy range = lower premium)\n• Smoking status (non-smokers pay less)\n• Number of children/dependents\n• Geographic location\n• Health history",
+                
+                // BMI related
+                bmi: "BMI (Body Mass Index) significantly affects your premium. A healthy BMI (18.5-24.9) can help keep costs down. Higher BMI indicates higher health risks, leading to increased premiums. Consider maintaining a healthy diet and regular exercise!",
+                
+                // Smoking
+                smoking: "Smoking dramatically increases insurance premiums - often by $10,000+ annually! Quitting smoking is one of the best ways to reduce your premium and improve your health. Many insurers offer discounts after 12 months smoke-free.",
+                
+                // Age
+                age: "Age is a major factor in premium calculation. While we can't control aging, maintaining good health becomes increasingly important as we age. Regular checkups and healthy lifestyle choices help manage costs.",
+                
+                // Health tips
+                health: "Here are some tips to potentially lower your premium:\n• Maintain a healthy BMI (18.5-24.9)\n• Don't smoke or quit if you do\n• Exercise regularly\n• Get annual health checkups\n• Manage chronic conditions well\n• Consider your family size when planning",
+                
+                // General insurance
+                insurance: "Medical insurance helps protect you from high healthcare costs. Premiums vary based on your risk profile - the healthier you are, the less you typically pay. Our AI model helps estimate these costs accurately!",
+                
+                // Application specific
+                app: "Our application uses machine learning to predict insurance premiums based on your personal information. It considers age, gender, BMI, smoking status, dependents, and location to give you accurate estimates instantly!",
+                
+                predict: "To make a prediction, go to the 'Predict Premium' page and enter your details. Our AI model will analyze your information and provide an estimated premium. You can also track your prediction history!",
+                
+                // Default responses
+                default: [
+                    "That's an interesting question! While I focus on insurance topics, I'd recommend consulting with a healthcare professional for specific medical advice.",
+                    "I'm here to help with insurance-related questions. Could you ask something about premiums, health factors, or our prediction system?",
+                    "Let me help you with insurance topics! Try asking about premium factors, BMI, smoking effects, or how our prediction system works.",
+                    "I specialize in insurance guidance. What would you like to know about factors affecting your premium?"
+                ]
+            };
+            
+            // Check for keyword matches
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (keyword !== 'default' && message.includes(keyword)) {
+                    return response;
+                }
+            }
+            
+            // Return random default response
+            const defaultResponses = responses.default;
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+        
+        function clearChat() {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            messagesContainer.innerHTML = `
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <i class="fas fa-robot me-2"></i>
+                        Chat cleared! How can I help you today?
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

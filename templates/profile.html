@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Medical Insurance Premium Prediction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <h2 class="mb-2">{{ current_user.username }}</h2>
+                            <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ current_user.email }}</p>
+                            <p class="mb-0"><i class="fas fa-calendar me-2"></i>Member since: Date</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="bg-primary text-white rounded-circle p-3">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-primary">{{ stats.total_predictions }}</h3>
+                    <p class="text-muted mb-0">Total Predictions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="bg-success text-white rounded-circle p-3">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-success">
+                        {% if stats.avg_premium > 0 %}
+                            ${{ "%.2f"|format(stats.avg_premium) }}
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted mb-0">Average Premium</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <div class="bg-info text-white rounded-circle p-3">
+                            <i class="fas fa-calendar fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-info">
+                        {% if stats.latest_prediction %}
+                            {{ stats.latest_prediction['created_at'][:10] }}
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted mb-0">Last Prediction</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Prediction Details -->
+    {% if stats.latest_prediction %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Latest Prediction Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Date:</strong></td>
+                                    <td>{{ stats.latest_prediction['created_at'][:19] }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Age:</strong></td>
+                                    <td>{{ stats.latest_prediction['age'] }} years</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Gender:</strong></td>
+                                    <td>{{ stats.latest_prediction['gender'].title() }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>BMI:</strong></td>
+                                    <td>
+                                        {{ "%.1f"|format(stats.latest_prediction['bmi']) }}
+                                        <span class="badge 
+                                            {% if stats.latest_prediction['bmi'] < 18.5 %}bg-info
+                                            {% elif stats.latest_prediction['bmi'] < 25 %}bg-success
+                                            {% elif stats.latest_prediction['bmi'] < 30 %}bg-warning
+                                            {% else %}bg-danger
+                                            {% endif %}">
+                                            {% if stats.latest_prediction['bmi'] < 18.5 %}Underweight
+                                            {% elif stats.latest_prediction['bmi'] < 25 %}Normal
+                                            {% elif stats.latest_prediction['bmi'] < 30 %}Overweight
+                                            {% else %}Obese
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Children:</strong></td>
+                                    <td>{{ stats.latest_prediction['children'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Smoker:</strong></td>
+                                    <td>
+                                        {% if stats.latest_prediction['smoker'] == 'yes' %}
+                                            <span class="badge bg-danger">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-success">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Region:</strong></td>
+                                    <td>{{ stats.latest_prediction['region'].title() }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Premium:</strong></td>
+                                    <td class="fw-bold text-success fs-5">
+                                        ${{ "%.2f"|format(stats.latest_prediction['predicted_premium']) }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Health Tips Based on Profile -->
+    {% if stats.latest_prediction %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Personalized Health Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% set bmi = stats.latest_prediction['bmi'] %}
+                        {% set smoker = stats.latest_prediction['smoker'] %}
+                        {% set age = stats.latest_prediction['age'] %}
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-primary">BMI Recommendations:</h6>
+                            <ul class="list-unstyled">
+                                {% if bmi < 18.5 %}
+                                    <li><i class="fas fa-arrow-up text-info me-2"></i>Consider gaining healthy weight</li>
+                                    <li><i class="fas fa-utensils text-info me-2"></i>Eat nutrient-rich, calorie-dense foods</li>
+                                {% elif bmi < 25 %}
+                                    <li><i class="fas fa-check text-success me-2"></i>Maintain your healthy weight</li>
+                                    <li><i class="fas fa-running text-success me-2"></i>Continue regular exercise</li>
+                                {% elif bmi < 30 %}
+                                    <li><i class="fas fa-arrow-down text-warning me-2"></i>Consider gradual weight loss</li>
+                                    <li><i class="fas fa-apple-alt text-warning me-2"></i>Focus on balanced diet</li>
+                                {% else %}
+                                    <li><i class="fas fa-exclamation-triangle text-danger me-2"></i>Consult healthcare provider</li>
+                                    <li><i class="fas fa-heartbeat text-danger me-2"></i>Focus on cardiovascular health</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Lifestyle Tips:</h6>
+                            <ul class="list-unstyled">
+                                {% if smoker == 'yes' %}
+                                    <li><i class="fas fa-ban text-danger me-2"></i>Consider quitting smoking</li>
+                                    <li><i class="fas fa-phone text-danger me-2"></i>Contact smoking cessation programs</li>
+                                {% else %}
+                                    <li><i class="fas fa-heart text-success me-2"></i>Great job staying smoke-free!</li>
+                                {% endif %}
+                                
+                                {% if age > 40 %}
+                                    <li><i class="fas fa-stethoscope text-info me-2"></i>Regular health checkups recommended</li>
+                                    <li><i class="fas fa-shield-alt text-info me-2"></i>Consider preventive screenings</li>
+                                {% else %}
+                                    <li><i class="fas fa-leaf text-success me-2"></i>Build healthy habits early</li>
+                                    <li><i class="fas fa-dumbbell text-success me-2"></i>Stay active and exercise regularly</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('user.predict') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-calculator me-2"></i>New Prediction
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('user.history') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-history me-2"></i>View History
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-secondary w-100" onclick="exportProfile()">
+                                <i class="fas fa-download me-2"></i>Export Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportProfile() {
+    // Create export data
+    const exportData = {
+        username: '{{ current_user.username }}',
+        email: '{{ current_user.email }}',
+        statistics: {
+            total_predictions: {{ stats.total_predictions }},
+            average_premium: {{ stats.avg_premium if stats.avg_premium > 0 else 0 }},
+            latest_prediction_date: '{{ stats.latest_prediction["created_at"][:10] if stats.latest_prediction else "N/A" }}'
+        }
+        {% if stats.latest_prediction %},
+        latest_prediction: {
+            date: '{{ stats.latest_prediction["created_at"][:19] }}',
+            age: {{ stats.latest_prediction['age'] }},
+            gender: '{{ stats.latest_prediction["gender"] }}',
+            bmi: {{ stats.latest_prediction['bmi'] }},
+            children: {{ stats.latest_prediction['children'] }},
+            smoker: '{{ stats.latest_prediction["smoker"] }}',
+            region: '{{ stats.latest_prediction["region"] }}',
+            premium: {{ stats.latest_prediction['predicted_premium'] }}
+        }
+        {% endif %}
+    };
+    
+    // Convert to JSON and download
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = 'profile_data_{{ current_user.username }}.json';
+    link.click();
+    
+    // Show success message
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Profile data exported successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Add some animation effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<style>
+.position-fixed {
+    position: fixed;
+}
+
+.table td, .table th {
+    padding: 8px 12px;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.bg-primary .rounded-circle {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}

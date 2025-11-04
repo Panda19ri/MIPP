@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-users me-2"></i>Manage Users</h2>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>All Users
+                        <span class="badge bg-primary ms-2">{{ users|length }}</span>
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="usersTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Joined Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td><strong>{{ user['id'] }}</strong></td>
+                                        <td>
+                                            <i class="fas fa-user me-1"></i>
+                                            {{ user['username'] }}
+                                        </td>
+                                        <td>{{ user['email'] }}</td>
+                                        <td>
+                                            {% if user['is_admin'] %}
+                                                <span class="badge bg-danger">Admin</span>
+                                            {% else %}
+                                                <span class="badge bg-success">User</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ user['created_at'][:19] }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-info" 
+                                                        onclick="viewUserActivity({{ user['id'] }})"
+                                                        data-bs-toggle="tooltip" title="View Activity">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </button>
+                                                
+                                                {% if not user['is_admin'] %}
+                                                <button class="btn btn-sm btn-outline-danger" 
+                                                        onclick="confirmDeleteUser({{ user['id'] }}, '{{ user['username'] }}')"
+                                                        data-bs-toggle="tooltip" title="Delete User">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                            <h4 class="mt-3 text-muted">No Users Found</h4>
+                            <p class="text-muted">Users will appear here when they register.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm User Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user <strong id="deleteUsername"></strong>?</p>
+                <p class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    This action cannot be undone and will delete all associated prediction history.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteUser()" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>Delete User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Activity Modal -->
+<div class="modal fade" id="userActivityModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userActivityContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let userToDelete = null;
+
+function confirmDeleteUser(userId, username) {
+    userToDelete = userId;
+    document.getElementById('deleteUsername').textContent = username;
+    new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+}
+
+function deleteUser() {
+    if (!userToDelete) return;
+    
+    const btn = document.getElementById('confirmDeleteBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+    btn.disabled = true;
+    
+    fetch(`{{ url_for('admin.delete_user', user_id=0) }}`.replace('0', userToDelete), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // ✅ Remove the deleted user's row dynamically
+            const rows = document.querySelectorAll('#usersTable tbody tr');
+            rows.forEach(row => {
+                const idCell = row.querySelector('td strong');
+                if (idCell && idCell.textContent == userToDelete) {
+                    row.remove();
+                }
+            });
+
+            showAlert('User deleted successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+            
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showAlert(data.error || 'Failed to delete user', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Network error occurred', 'danger');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function viewUserActivity(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('userActivityModal'));
+    modal.show();
+
+    document.getElementById('userActivityContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+
+    fetch(`{{ url_for('admin.user_activity', user_id=0) }}`.replace('0', userId))
+        .then(response => response.json())
+        .then(data => {
+            let html = '<h6>Recent Predictions</h6>';
+            
+            if (data.length > 0) {
+                html += '<div class="table-responsive"><table class="table table-sm">';
+                html += '<thead><tr><th>Date</th><th>Age</th><th>BMI</th><th>Smoker</th><th>Premium</th></tr></thead><tbody>';
+                
+                data.forEach(item => {
+                    const smokerBadge = item.smoker === 'yes' 
+                        ? '<span class="badge bg-danger">Yes</span>' 
+                        : '<span class="badge bg-success">No</span>';
+                    
+                    html += `<tr>
+                        <td><small>${item.date.substring(0,19)}</small></td>
+                        <td>${item.age}</td>
+                        <td>${item.bmi}</td>
+                        <td>${smokerBadge}</td>
+                        <td class="fw-bold text-success">${item.premium.toFixed(2)}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            } else {
+                html += '<div class="alert alert-info">No prediction history found for this user.</div>';
+            }
+            
+            document.getElementById('userActivityContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('userActivityContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading user activity data</div>';
+            console.error('Error:', error);
+        });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// Initialize tooltips and search
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'form-control mb-3';
+    searchInput.placeholder = 'Search users...';
+    searchInput.addEventListener('input', filterUsers);
+    
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) tableContainer.parentNode.insertBefore(searchInput, tableContainer);
+});
+
+function filterUsers(event) {
+    const searchTerm = event.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    rows.forEach(row => {
+        const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const email = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        row.style.display = (username.includes(searchTerm) || email.includes(searchTerm)) ? '' : 'none';
+    });
+}
+
+// Sorting
+function sortTable(columnIndex) {
+    const table = document.getElementById('usersTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const isAscending = table.dataset.sortDirection !== 'asc';
+    table.dataset.sortDirection = isAscending ? 'asc' : 'desc';
+    
+    rows.sort((a, b) => {
+        const aValue = a.children[columnIndex].textContent.trim();
+        const bValue = b.children[columnIndex].textContent.trim();
+        return isAscending ? aValue.localeCompare(bValue, undefined, {numeric: true})
+                           : bValue.localeCompare(aValue, undefined, {numeric: true});
+    });
+    
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const headers = document.querySelectorAll('#usersTable thead th');
+    headers.forEach((header, index) => {
+        if (index < headers.length - 1) {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => sortTable(index));
+            header.innerHTML += ' <i class="fas fa-sort ms-1"></i>';
+        }
+    });
+});
+</script>
+
+<style>
+.position-fixed {
+    position: fixed;
+}
+.table th {
+    user-select: none;
+}
+.table th:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+#usersTable tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+.btn-group .btn {
+    margin-right: 2px;
+}
+.modal-header.bg-danger .btn-close {
+    filter: invert(1);
+}
+</style>
+{% endblock %}

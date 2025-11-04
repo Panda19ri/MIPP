@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - Medical Insurance Premium Prediction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history me-2"></i>Your Prediction History</h2>
+                <a href="{{ url_for('user.predict') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Prediction
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>All Predictions
+                        <span class="badge bg-primary ms-2">{{ predictions|length }}</span>
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    {% if predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="historyTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Age</th>
+                                        <th>Gender</th>
+                                        <th>BMI</th>
+                                        <th>Children</th>
+                                        <th>Smoker</th>
+                                        <th>Region</th>
+                                        <th>Predicted Premium</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prediction in predictions %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ prediction['created_at'][:19] }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ prediction['age'] }}</span>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-{{ 'mars' if prediction['gender'] == 'male' else 'venus' }} me-1"></i>
+                                            {{ prediction['gender'].title() }}
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if prediction['bmi'] < 18.5 %}bg-info
+                                                {% elif prediction['bmi'] < 25 %}bg-success
+                                                {% elif prediction['bmi'] < 30 %}bg-warning
+                                                {% else %}bg-danger
+                                                {% endif %}">
+                                                {{ "%.1f"|format(prediction['bmi']) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-baby me-1"></i>{{ prediction['children'] }}
+                                        </td>
+                                        <td>
+                                            {% if prediction['smoker'] == 'yes' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-smoking me-1"></i>Yes
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-heart me-1"></i>No
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ prediction['region'].title() }}</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">
+                                                ${{ "%.2f"|format(prediction['predicted_premium']) }}
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    onclick="showPredictionDetails({{ prediction['id'] }})"
+                                                    data-bs-toggle="tooltip" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Total Predictions</h5>
+                                        <h3>{{ predictions|length }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Average Premium</h5>
+                                        <h3>${{ "%.2f"|format(predictions|sum(attribute='predicted_premium')/predictions|length) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Highest Premium</h5>
+                                        {% set max_prediction = predictions|max(attribute='predicted_premium') %}
+                                        <h3>${{ "%.2f"|format(max_prediction.predicted_premium) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Lowest Premium</h5>
+                                        {% set min_prediction = predictions|min(attribute='predicted_premium') %}
+                                        <h3>${{ "%.2f"|format(min_prediction.predicted_premium) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                            <h4 class="mt-3 text-muted">No Prediction History</h4>
+                            <p class="text-muted mb-4">You haven't made any predictions yet. Start by making your first prediction!</p>
+                            <a href="{{ url_for('user.predict') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>Make Your First Prediction
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Prediction Details -->
+<div class="modal fade" id="predictionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Prediction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="predictionDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPredictionDetails(predictionId) {
+    // Find the prediction data from the table
+    const rows = document.querySelectorAll('#historyTable tbody tr');
+    const targetRow = Array.from(rows).find(row => {
+        return row.querySelector('button').getAttribute('onclick').includes(predictionId);
+    });
+    
+    if (targetRow) {
+        const cells = targetRow.querySelectorAll('td');
+        const details = `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Date:</strong> ${cells[0].textContent.trim()}</p>
+                    <p><strong>Age:</strong> ${cells[1].textContent.trim()}</p>
+                    <p><strong>Gender:</strong> ${cells[2].textContent.trim()}</p>
+                    <p><strong>BMI:</strong> ${cells[3].textContent.trim()}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Children:</strong> ${cells[4].textContent.trim()}</p>
+                    <p><strong>Smoker:</strong> ${cells[5].textContent.trim()}</p>
+                    <p><strong>Region:</strong> ${cells[6].textContent.trim()}</p>
+                    <p><strong>Premium:</strong> <span class="text-success fw-bold">${cells[7].textContent.trim()}</span></p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('predictionDetails').innerHTML = details;
+        new bootstrap.Modal(document.getElementById('predictionModal')).show();
+    }
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

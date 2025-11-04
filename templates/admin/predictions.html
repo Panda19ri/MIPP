@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Predictions - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h2 class="mb-2"><i class="fas fa-chart-bar me-2"></i>All Predictions</h2>
+                    <p class="mb-0">Browse, search, and manage prediction history</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictions Table -->
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-database me-2"></i>Prediction Records</h5>
+            <input type="text" id="searchInput" class="form-control w-25" placeholder="Search user...">
+        </div>
+        <div class="card-body">
+            {% if predictions %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="predictionsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>Age</th>
+                            <th>BMI</th>
+                            <th>Smoker</th>
+                            <th>Region</th>
+                            <th>Premium</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in predictions %}
+                        <tr>
+                            <td><i class="fas fa-user me-1"></i> {{ p.username }}</td>
+                            <td>{{ p.created_at[:19] }}</td>
+                            <td>{{ p.age }}</td>
+                            <td>{{ "%.1f"|format(p.bmi) }}</td>
+                            <td>
+                                {% if p.smoker == 'yes' %}
+                                    <span class="badge bg-danger">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-success">No</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.region.title() }}</td>
+                            <td class="fw-bold text-success">${{ "%.2f"|format(p.predicted_premium) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-chart-line text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="mt-3 text-muted">No Predictions Found</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#predictionsTable tbody tr");
+    rows.forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+</script>
+{% endblock %}

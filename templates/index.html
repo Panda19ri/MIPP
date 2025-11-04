@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Medical Insurance Premium Prediction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold text-primary mb-3">
+                AI-Powered Insurance Premium Prediction
+            </h1>
+            <p class="lead mb-4">
+                Get accurate, personalized medical insurance premium estimates using advanced machine learning algorithms. 
+                Simply input your details and receive instant predictions based on your age, health metrics, and lifestyle factors.
+            </p>
+            
+            {% if current_user.is_authenticated %}
+                <div class="d-grid gap-2 d-md-flex">
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg me-md-2">
+                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('user.predict') }}" class="btn btn-primary btn-lg me-md-2">
+                            <i class="fas fa-calculator me-2"></i>Predict Premium
+                        </a>
+                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-md-2">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="text-center">
+                <i class="fas fa-shield-alt text-primary" style="font-size: 200px; opacity: 0.1;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Why Choose Our Platform?</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-brain text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">AI-Powered Accuracy</h5>
+                    <p class="card-text">
+                        Our advanced machine learning model analyzes multiple factors to provide highly accurate premium predictions.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-bolt text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Instant Results</h5>
+                    <p class="card-text">
+                        Get your insurance premium estimate in seconds, not days. No waiting, no paperwork hassles.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Track History</h5>
+                    <p class="card-text">
+                        Keep track of all your predictions and see how different factors affect your premium estimates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">How It Works</h2>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="step-number mb-3">1</div>
+            <h5>Create Account</h5>
+            <p>Sign up for free and access our prediction platform.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="step-number mb-3">2</div>
+            <h5>Enter Details</h5>
+            <p>Provide your age, BMI, smoking status, and other relevant information.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="step-number mb-3">3</div>
+            <h5>Get Prediction</h5>
+            <p>Our AI model instantly calculates your personalized premium estimate.</p>
+        </div>
+        
+        <div class="col-md-3 mb-4 text-center">
+            <div class="step-number mb-3">4</div>
+            <h5>Track & Compare</h5>
+            <p>View your prediction history and track changes over time.</p>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="row bg-primary text-white rounded p-4 mb-5">
+        <div class="col-md-4 text-center mb-3 mb-md-0">
+            <h3 class="fw-bold">98%</h3>
+            <p class="mb-0">Prediction Accuracy</p>
+        </div>
+        <div class="col-md-4 text-center mb-3 mb-md-0">
+            <h3 class="fw-bold">10K+</h3>
+            <p class="mb-0">Predictions Made</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <h3 class="fw-bold">500+</h3>
+            <p class="mb-0">Happy Users</p>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    {% if not current_user.is_authenticated %}
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="bg-light rounded p-5">
+                <h3 class="mb-3">Ready to Get Your Premium Estimate?</h3>
+                <p class="mb-4">Join thousands of users who trust our AI-powered predictions for their insurance planning.</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket me-2"></i>Start Now - It's Free!
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.step-number {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

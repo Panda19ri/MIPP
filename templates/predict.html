@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Premium - Medical Insurance Premium Prediction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0 text-center">
+                        <i class="fas fa-calculator me-2"></i>
+                        Insurance Premium Prediction
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4">
+                    <p class="text-muted text-center mb-4">
+                        Enter your personal details below to get an accurate insurance premium estimate.
+                    </p>
+                    
+                    <form method="POST" id="predictionForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Age
+                                </label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       min="18" max="100" required>
+                                <div class="form-text">Age between 18 and 100</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">
+                                    <i class="fas fa-venus-mars me-1"></i>Gender
+                                </label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="bmi" class="form-label">
+                                    <i class="fas fa-weight me-1"></i>BMI (Body Mass Index)
+                                </label>
+                                <input type="number" class="form-control" id="bmi" name="bmi" 
+                                       min="10" max="50" step="0.1" required>
+                                <div class="form-text">BMI between 10 and 50</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="children" class="form-label">
+                                    <i class="fas fa-baby me-1"></i>Number of Children
+                                </label>
+                                <input type="number" class="form-control" id="children" name="children" 
+                                       min="0" max="10" required>
+                                <div class="form-text">Number of dependents</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="smoker" class="form-label">
+                                    <i class="fas fa-smoking me-1"></i>Smoking Status
+                                </label>
+                                <select class="form-select" id="smoker" name="smoker" required>
+                                    <option value="">Select Status</option>
+                                    <option value="yes">Yes, I smoke</option>
+                                    <option value="no">No, I don't smoke</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="region" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Region
+                                </label>
+                                <select class="form-select" id="region" name="region" required>
+                                    <option value="">Select Region</option>
+                                    <option value="northeast">Northeast</option>
+                                    <option value="southeast">Southeast</option>
+                                    <option value="southwest">Southwest</option>
+                                    <option value="northwest">Northwest</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                    <button type="submit" class="btn btn-primary btn-lg me-md-2">
+                                        <i class="fas fa-magic me-2"></i>Predict Premium
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-undo me-2"></i>Reset Form
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- BMI Calculator Helper -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>BMI Calculator
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label for="height" class="form-label">Height (cm)</label>
+                                <input type="number" class="form-control" id="height" placeholder="170">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label for="weight" class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" id="weight" placeholder="70">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-info btn-sm" onclick="calculateBMI()">
+                        Calculate BMI
+                    </button>
+                    <div id="bmiResult" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <!-- Information Panel -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-1"></i>Factors Affecting Premium</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="fas fa-check text-success me-2"></i>Age (older = higher premium)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>BMI (obesity increases costs)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Smoking (significantly increases premium)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Number of dependents</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Geographic region</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-lightbulb me-1"></i>Tips for Lower Premiums</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="fas fa-star text-warning me-2"></i>Maintain healthy BMI (18.5-24.9)</li>
+                                <li><i class="fas fa-star text-warning me-2"></i>Quit smoking if applicable</li>
+                                <li><i class="fas fa-star text-warning me-2"></i>Regular health check-ups</li>
+                                <li><i class="fas fa-star text-warning me-2"></i>Compare regional options</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateBMI() {
+    const height = document.getElementById('height').value;
+    const weight = document.getElementById('weight').value;
+    
+    if (height && weight) {
+        const heightM = height / 100;
+        const bmi = (weight / (heightM * heightM)).toFixed(1);
+        
+        let category = '';
+        let colorClass = '';
+        
+        if (bmi < 18.5) {
+            category = 'Underweight';
+            colorClass = 'text-info';
+        } else if (bmi < 25) {
+            category = 'Normal weight';
+            colorClass = 'text-success';
+        } else if (bmi < 30) {
+            category = 'Overweight';
+            colorClass = 'text-warning';
+        } else {
+            category = 'Obese';
+            colorClass = 'text-danger';
+        }
+        
+        document.getElementById('bmiResult').innerHTML = 
+            `<strong>Your BMI: <span class="${colorClass}">${bmi}</span> (${category})</strong>`;
+        
+        // Auto-fill BMI in the main form
+        document.getElementById('bmi').value = bmi;
+    } else {
+        document.getElementById('bmiResult').innerHTML = 
+            '<span class="text-danger">Please enter both height and weight</span>';
+    }
+}
+
+// Form validation
+document.getElementById('predictionForm').addEventListener('submit', function(e) {
+    const age = document.getElementById('age').value;
+    const bmi = document.getElementById('bmi').value;
+    const children = document.getElementById('children').value;
+    
+    let errors = [];
+    
+    if (age < 18 || age > 100) {
+        errors.push('Age must be between 18 and 100');
+    }
+    
+    if (bmi < 10 || bmi > 50) {
+        errors.push('BMI must be between 10 and 50');
+    }
+    
+    if (children < 0 || children > 10) {
+        errors.push('Number of children must be between 0 and 10');
+    }
+    
+    if (errors.length > 0) {
+        e.preventDefault();
+        alert('Please fix the following errors:\n' + errors.join('\n'));
+    }
+});
+</script>
+{% endblock %}

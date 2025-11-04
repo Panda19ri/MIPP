@@ -1,0 +1,79 @@
+@startuml
+' ===============================
+'   Project Architecture Diagram
+'   Dark Theme (Safe + Compatible)
+' ===============================
+
+' Diagram layout
+top to bottom direction
+
+' General visual settings
+skinparam dpi 150
+skinparam roundcorner 15
+skinparam shadowing true
+skinparam ArrowColor #E0E7FF
+skinparam ArrowThickness 1.2
+skinparam backgroundColor #0F172A  ' dark navy background
+
+' Activity element styling (safe syntax)
+skinparam ActivityBackgroundColor #1E293B
+skinparam ActivityBorderColor #60A5FA
+skinparam ActivityFontColor #E2E8F0
+skinparam ActivityFontName Arial
+skinparam ActivityFontSize 12
+
+' Start and end node colors (use safe skinparam keys)
+skinparam StartColor #2563EB
+skinparam EndColor #F43F5E
+
+' Title (optional)
+title **Medical Insurance Prediction – Project Architecture (Dark Theme)**
+
+' ----- Diagram Flow -----
+start
+
+:Collect Dataset;
+note right
+Collect raw data:
+age, BMI, region,
+smoker status, etc.
+end note
+
+:Import Data to Colab;
+:Analyse Data;
+:Processing on Data;
+note right
+Data cleaning, encoding,
+and feature engineering
+end note
+
+:Apply Regression Techniques;
+note right
+Regression algorithms:
+• XGBoost  
+• Gradient Boosting  
+• Random Forest  
+• Linear Model
+end note
+
+fork
+  :XGBoost;
+fork again
+  :Gradient Boosting;
+fork again
+  :Random Forest;
+fork again
+  :Linear Model;
+end fork
+
+:Training Model;
+:Testing Model;
+
+:Predict Insurance Cost;
+note right
+Final Output:  
+Predicted medical insurance premium
+end note
+
+stop
+@enduml

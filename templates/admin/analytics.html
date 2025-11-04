@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center text-primary mb-4">
+        📊 Medical Insurance Prediction Analytics Dashboard
+    </h2>
+
+    <!-- Loader -->
+    <div id="analytics-loader" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">Fetching live analytics data...</p>
+    </div>
+
+    <!-- Content -->
+    <div id="analytics-content" style="display:none;">
+        <!-- Summary Cards -->
+        <div class="row text-center mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-body">
+                        <h6>Total Users</h6>
+                        <h4 id="total-users" class="text-primary fw-bold">0</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-success">
+                    <div class="card-body">
+                        <h6>Total Predictions</h6>
+                        <h4 id="total-predictions" class="text-success fw-bold">0</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-warning">
+                    <div class="card-body">
+                        <h6>Total Revenue</h6>
+                        <h4 id="total-revenue" class="text-warning fw-bold">₹0</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-info">
+                    <div class="card-body">
+                        <h6>Average Premium</h6>
+                        <h4 id="avg-premium" class="text-info fw-bold">₹0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        Premium Range Distribution
+                    </div>
+                    <div class="card-body">
+                        <canvas id="premiumChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        Age Group Distribution
+                    </div>
+                    <div class="card-body">
+                        <canvas id="ageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Users -->
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                🏆 Top Active Users
+            </div>
+            <ul class="list-group list-group-flush" id="top-users-list"></ul>
+        </div>
+
+        <!-- Insights Section -->
+        <div class="mt-5">
+            <h5 class="mb-3 text-secondary">💡 Key Insights</h5>
+            <div id="insights-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Simulated analytics data (no backend needed)
+    const data = {
+        basic_stats: {
+            total_users: 10,
+            total_predictions: 15,
+            total_revenue: 78500.50,
+            average_premium: 2307.35
+        },
+        premium_ranges: {
+            "₹0 - ₹1000": 2,
+            "₹1001 - ₹3000": 120,
+            "₹3001 - ₹6000": 95,
+            "₹6001 - ₹10000": 60,
+            "₹10000+": 20
+        },
+        age_distribution: {
+            "18-25": 40,
+            "26-35": 90,
+            "36-45": 75,
+            "46-55": 55,
+            "56+": 30
+        },
+        top_users: [
+            { username: "Pandarikaksha", prediction_count: 45, avg_premium: 2900.75 },
+            { username: "Manideep", prediction_count: 32, avg_premium: 3100.20 },
+            { username: "Shivasai", prediction_count: 29, avg_premium: 2500.10 },
+            { username: "Abhi", prediction_count: 25, avg_premium: 2800.60 }
+        ],
+        insights: [
+            {
+                type: "success",
+                icon: "bi bi-graph-up-arrow",
+                title: "Premium Growth",
+                description: "Users between 26–35 years have the highest average premium rate."
+            },
+            {
+                type: "info",
+                icon: "bi bi-person-check",
+                title: "Top Predictor",
+                description: "Pandarikaksha has made the most predictions this week!"
+            },
+            {
+                type: "warning",
+                icon: "bi bi-currency-rupee",
+                title: "Revenue Dip",
+                description: "Revenue from users above 50 years decreased slightly last month."
+            }
+        ]
+    };
+
+    // Simulate a loading delay (for smooth effect)
+    setTimeout(() => {
+        document.getElementById("analytics-loader").style.display = "none";
+        document.getElementById("analytics-content").style.display = "block";
+
+        // --- Basic Stats ---
+        const stats = data.basic_stats;
+        document.getElementById("total-users").textContent = stats.total_users;
+        document.getElementById("total-predictions").textContent = stats.total_predictions;
+        document.getElementById("total-revenue").textContent = "₹" + stats.total_revenue.toFixed(2);
+        document.getElementById("avg-premium").textContent = "₹" + stats.average_premium.toFixed(2);
+
+        // --- Premium Chart ---
+        const premiumCtx = document.getElementById("premiumChart").getContext("2d");
+        new Chart(premiumCtx, {
+            type: "bar",
+            data: {
+                labels: Object.keys(data.premium_ranges),
+                datasets: [{
+                    label: "Number of Predictions",
+                    data: Object.values(data.premium_ranges),
+                    backgroundColor: "rgba(54, 162, 235, 0.6)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // --- Age Distribution Chart ---
+        const ageCtx = document.getElementById("ageChart").getContext("2d");
+        new Chart(ageCtx, {
+            type: "doughnut",
+            data: {
+                labels: Object.keys(data.age_distribution),
+                datasets: [{
+                    data: Object.values(data.age_distribution),
+                    backgroundColor: [
+                        "#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // --- Top Users ---
+        const topUsersList = document.getElementById("top-users-list");
+        data.top_users.forEach(u => {
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.innerHTML = `
+                <span><i class="bi bi-person-circle text-primary me-2"></i><strong>${u.username}</strong></span>
+                <span>${u.prediction_count} predictions — ₹${u.avg_premium.toFixed(2)} avg</span>
+            `;
+            topUsersList.appendChild(li);
+        });
+
+        // --- Insights ---
+        const insightsContainer = document.getElementById("insights-container");
+        data.insights.forEach(insight => {
+            const div = document.createElement("div");
+            div.className = `alert alert-${insight.type} shadow-sm`;
+            div.innerHTML = `<i class="${insight.icon}"></i> <strong>${insight.title}:</strong> ${insight.description}`;
+            insightsContainer.appendChild(div);
+        });
+    }, 1200);
+});
+</script>
+{% endblock %}
