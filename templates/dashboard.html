@@ -51,9 +51,9 @@
                     </div>
                     <h3 class="fw-bold text-success">
                         {% if predictions %}
-                            ${{ "%.2f"|format(predictions|sum(attribute='predicted_premium')/predictions|length) }}
+                            ₹{{ "%.2f"|format(predictions|sum(attribute='predicted_premium')/predictions|length) }}
                         {% else %}
-                            $0.00
+                            ₹0.00
                         {% endif %}
                     </h3>
                     <p class="text-muted mb-0">Average Premium</p>
@@ -124,7 +124,7 @@
                                         </td>
                                         <td>{{ prediction['region'].title() }}</td>
                                         <td class="fw-bold text-primary">
-                                            ${{ "%.2f"|format(prediction['predicted_premium']) }}
+                                            ₹{{ "%.2f"|format(prediction['predicted_premium']) }}
                                         </td>
                                     </tr>
                                     {% endfor %}

@@ -26,3 +26,4 @@ CREATE TABLE IF NOT EXISTS predictions (
 -- Index for better query performance
 CREATE INDEX IF NOT EXISTS idx_user_predictions ON predictions(user_id);
 CREATE INDEX IF NOT EXISTS idx_created_at ON predictions(created_at);
+

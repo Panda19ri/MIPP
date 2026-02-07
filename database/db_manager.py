@@ -31,26 +31,57 @@ def init_database():
     conn.commit()
     conn.close()
 
+# def create_admin_user():
+#     """Create default admin user if not exists"""
+#     conn = get_db_connection()
+    
+#     # Check if admin user exists
+#     admin = conn.execute(
+#         'SELECT id FROM users WHERE username = ',
+#         (Config.DEFAULT_ADMIN_USERNAME,)
+#     ).fetchone()
+    
+#     if not admin:
+#         password_hash = generate_password_hash(Config.DEFAULT_ADMIN_PASSWORD)
+#         conn.execute(
+#             'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
+#             (Config.DEFAULT_ADMIN_USERNAME, Config.DEFAULT_ADMIN_EMAIL, password_hash, True)
+#         )
+#         conn.commit()
+#         print(f"Admin user created: {Config.DEFAULT_ADMIN_USERNAME}")
+    
+#     conn.close()
 def create_admin_user():
     """Create default admin user if not exists"""
     conn = get_db_connection()
-    
-    # Check if admin user exists
+
+    # ✅ Check if any admin user already exists
     admin = conn.execute(
-        'SELECT id FROM users WHERE username = ?',
-        (Config.DEFAULT_ADMIN_USERNAME,)
+        'SELECT id FROM users WHERE is_admin = 1'
     ).fetchone()
-    
-    if not admin:
-        password_hash = generate_password_hash(Config.DEFAULT_ADMIN_PASSWORD)
-        conn.execute(
-            'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
-            (Config.DEFAULT_ADMIN_USERNAME, Config.DEFAULT_ADMIN_EMAIL, password_hash, True)
+
+    if admin:
+        print("Admin user already exists. Skipping admin creation.")
+        conn.close()
+        return
+
+    # If no admin exists, create one
+    password_hash = generate_password_hash(Config.DEFAULT_ADMIN_PASSWORD)
+
+    conn.execute(
+        'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
+        (
+            Config.DEFAULT_ADMIN_USERNAME,
+            Config.DEFAULT_ADMIN_EMAIL,
+            password_hash,
+            True
         )
-        conn.commit()
-        print(f"Admin user created: {Config.DEFAULT_ADMIN_USERNAME}")
-    
+    )
+    conn.commit()
     conn.close()
+
+    print(f"Admin user created: {Config.DEFAULT_ADMIN_USERNAME}")
+
 
 def create_user(username, email, password):
     """Create a new user"""

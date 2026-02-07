@@ -35,7 +35,7 @@
                                         <th>Age</th>
                                         <th>Gender</th>
                                         <th>BMI</th>
-                                        <th>Children</th>
+                                        <th>Dependents</th>
                                         <th>Smoker</th>
                                         <th>Region</th>
                                         <th>Predicted Premium</th>
@@ -84,7 +84,7 @@
                                         </td>
                                         <td>
                                             <strong class="text-success">
-                                                ${{ "%.2f"|format(prediction['predicted_premium']) }}
+                                                ₹{{ "%.2f"|format(prediction['predicted_premium']) }}
                                             </strong>
                                         </td>
                                         <td>
@@ -114,7 +114,7 @@
                                 <div class="card bg-success text-white">
                                     <div class="card-body text-center">
                                         <h5>Average Premium</h5>
-                                        <h3>${{ "%.2f"|format(predictions|sum(attribute='predicted_premium')/predictions|length) }}</h3>
+                                        <h3>₹{{ "%.2f"|format(predictions|sum(attribute='predicted_premium')/predictions|length) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -123,7 +123,7 @@
                                     <div class="card-body text-center">
                                         <h5>Highest Premium</h5>
                                         {% set max_prediction = predictions|max(attribute='predicted_premium') %}
-                                        <h3>${{ "%.2f"|format(max_prediction.predicted_premium) }}</h3>
+                                        <h3>₹{{ "%.2f"|format(max_prediction.predicted_premium) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -132,7 +132,7 @@
                                     <div class="card-body text-center">
                                         <h5>Lowest Premium</h5>
                                         {% set min_prediction = predictions|min(attribute='predicted_premium') %}
-                                        <h3>${{ "%.2f"|format(min_prediction.predicted_premium) }}</h3>
+                                        <h3>₹{{ "%.2f"|format(min_prediction.predicted_premium) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -188,7 +188,7 @@ function showPredictionDetails(predictionId) {
                     <p><strong>BMI:</strong> ${cells[3].textContent.trim()}</p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Children:</strong> ${cells[4].textContent.trim()}</p>
+                    <p><strong>Dependents:</strong> ${cells[4].textContent.trim()}</p>
                     <p><strong>Smoker:</strong> ${cells[5].textContent.trim()}</p>
                     <p><strong>Region:</strong> ${cells[6].textContent.trim()}</p>
                     <p><strong>Premium:</strong> <span class="text-success fw-bold">${cells[7].textContent.trim()}</span></p>

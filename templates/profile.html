@@ -3,6 +3,9 @@
 {% block title %}Profile - Medical Insurance Premium Prediction{% endblock %}
 
 {% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <div class="container">
     <!-- Profile Header -->
     <div class="row mb-4">
@@ -53,9 +56,9 @@
                     </div>
                     <h3 class="fw-bold text-success">
                         {% if stats.avg_premium > 0 %}
-                            ${{ "%.2f"|format(stats.avg_premium) }}
+                            ₹{{ "%.2f"|format(stats.avg_premium) }}
                         {% else %}
-                            $0.00
+                            ₹0.00
                         {% endif %}
                     </h3>
                     <p class="text-muted mb-0">Average Premium</p>
@@ -133,7 +136,7 @@
                         <div class="col-md-6">
                             <table class="table table-borderless">
                                 <tr>
-                                    <td><strong>Children:</strong></td>
+                                    <td><strong>Dependents:</strong></td>
                                     <td>{{ stats.latest_prediction['children'] }}</td>
                                 </tr>
                                 <tr>
@@ -153,7 +156,7 @@
                                 <tr>
                                     <td><strong>Premium:</strong></td>
                                     <td class="fw-bold text-success fs-5">
-                                        ${{ "%.2f"|format(stats.latest_prediction['predicted_premium']) }}
+                                        ₹{{ "%.2f"|format(stats.latest_prediction['predicted_premium']) }}
                                     </td>
                                 </tr>
                             </table>
@@ -261,40 +264,88 @@
 </div>
 
 <script>
+// function exportProfile() {
+//     // Create export data
+//     const exportData = {
+//         username: '{{ current_user.username }}',
+//         email: '{{ current_user.email }}',
+//         statistics: {
+//             total_predictions: {{ stats.total_predictions }},
+//             average_premium: {{ stats.avg_premium if stats.avg_premium > 0 else 0 }},
+//             latest_prediction_date: '{{ stats.latest_prediction["created_at"][:10] if stats.latest_prediction else "N/A" }}'
+//         }
+//         {% if stats.latest_prediction %},
+//         latest_prediction: {
+//             date: '{{ stats.latest_prediction["created_at"][:19] }}',
+//             age: {{ stats.latest_prediction['age'] }},
+//             gender: '{{ stats.latest_prediction["gender"] }}',
+//             bmi: {{ stats.latest_prediction['bmi'] }},
+//             children: {{ stats.latest_prediction['children'] }},
+//             smoker: '{{ stats.latest_prediction["smoker"] }}',
+//             region: '{{ stats.latest_prediction["region"] }}',
+//             premium: {{ stats.latest_prediction['predicted_premium'] }}
+//         }
+//         {% endif %}
+//     };
+    
+//     // Convert to JSON and download
+//     const dataStr = JSON.stringify(exportData, null, 2);
+//     const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+//     const link = document.createElement('a');
+//     link.href = URL.createObjectURL(dataBlob);
+//     link.download = 'profile_data_{{ current_user.username }}.json';
+//     link.click();
+    
+//     // Show success message
+//     const alert = document.createElement('div');
+//     alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+//     alert.style.top = '20px';
+//     alert.style.right = '20px';
+//     alert.style.zIndex = '9999';
+//     alert.innerHTML = `
+//         <i class="fas fa-check-circle me-2"></i>
+//         Profile data exported successfully!
+//         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+//     `;
+//     document.body.appendChild(alert);
+    
+//     setTimeout(() => {
+//         if (alert.parentNode) {
+//             alert.parentNode.removeChild(alert);
+//         }
+//     }, 3000);
+// }
 function exportProfile() {
-    // Create export data
-    const exportData = {
-        username: '{{ current_user.username }}',
-        email: '{{ current_user.email }}',
-        statistics: {
-            total_predictions: {{ stats.total_predictions }},
-            average_premium: {{ stats.avg_premium if stats.avg_premium > 0 else 0 }},
-            latest_prediction_date: '{{ stats.latest_prediction["created_at"][:10] if stats.latest_prediction else "N/A" }}'
-        }
-        {% if stats.latest_prediction %},
-        latest_prediction: {
-            date: '{{ stats.latest_prediction["created_at"][:19] }}',
-            age: {{ stats.latest_prediction['age'] }},
-            gender: '{{ stats.latest_prediction["gender"] }}',
-            bmi: {{ stats.latest_prediction['bmi'] }},
-            children: {{ stats.latest_prediction['children'] }},
-            smoker: '{{ stats.latest_prediction["smoker"] }}',
-            region: '{{ stats.latest_prediction["region"] }}',
-            premium: {{ stats.latest_prediction['predicted_premium'] }}
-        }
-        {% endif %}
-    };
-    
-    // Convert to JSON and download
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = 'profile_data_{{ current_user.username }}.json';
-    link.click();
-    
-    // Show success message
+
+    // Generate PDF and download
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Medical Insurance Premium Prediction - Profile Report", 10, 15);
+
+    doc.setFontSize(12);
+    doc.text("Username: {{ current_user.username }}", 10, 30);
+    doc.text("Email: {{ current_user.email }}", 10, 40);
+    doc.text("Total Predictions: {{ stats.total_predictions }}", 10, 50);
+    doc.text("Average Premium: ₹{{ '%.2f'|format(stats.avg_premium) }}", 10, 60);
+
+    {% if stats.latest_prediction %}
+    doc.text("Latest Prediction Details:", 10, 75);
+    doc.text("Date: {{ stats.latest_prediction['created_at'][:19] }}", 10, 85);
+    doc.text("Age: {{ stats.latest_prediction['age'] }}", 10, 95);
+    doc.text("Gender: {{ stats.latest_prediction['gender'] }}", 10, 105);
+    doc.text("BMI: {{ stats.latest_prediction['bmi'] }}", 10, 115);
+    doc.text("Children: {{ stats.latest_prediction['children'] }}", 10, 125);
+    doc.text("Smoker: {{ stats.latest_prediction['smoker'] }}", 10, 135);
+    doc.text("Region: {{ stats.latest_prediction['region'] }}", 10, 145);
+    doc.text("Premium: ₹{{ '%.2f'|format(stats.latest_prediction['predicted_premium']) }}", 10, 155);
+    {% endif %}
+
+    doc.save("profile_report_{{ current_user.username }}.pdf");
+
+    // Show success message (your existing alert code can remain same)
     const alert = document.createElement('div');
     alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
     alert.style.top = '20px';
@@ -302,11 +353,11 @@ function exportProfile() {
     alert.style.zIndex = '9999';
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>
-        Profile data exported successfully!
+        Profile PDF exported successfully!
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     document.body.appendChild(alert);
-    
+
     setTimeout(() => {
         if (alert.parentNode) {
             alert.parentNode.removeChild(alert);

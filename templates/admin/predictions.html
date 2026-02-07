@@ -52,7 +52,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ p.region.title() }}</td>
-                            <td class="fw-bold text-success">${{ "%.2f"|format(p.predicted_premium) }}</td>
+                            <td class="fw-bold text-success">₹{{ "%.2f"|format(p.predicted_premium) }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

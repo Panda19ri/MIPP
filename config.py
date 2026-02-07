@@ -21,6 +21,6 @@ class Config:
     SCALER_PATH = 'models/scaler.pkl'
     
     # Admin Configuration
-    DEFAULT_ADMIN_USERNAME = 'admin'
+    DEFAULT_ADMIN_USERNAME = 'admin1234'
     DEFAULT_ADMIN_PASSWORD = 'admin123'
     DEFAULT_ADMIN_EMAIL = 'admin@insurance.com'
